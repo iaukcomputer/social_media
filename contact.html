@@ -205,6 +205,23 @@ button.tb.up{background:var(--win); box-shadow:inset -1px -1px var(--dk), inset 
     <div class="drow"><button type="button" class="okb" data-act="ok">OK</button></div>
   </div>
 </div>
+<div class="bsod" id="bsod" hidden>
+  <div class="in">
+    <svg class="face" viewBox="0 0 15 20" fill="#fff" aria-hidden="true"><rect x="1" y="6" width="3" height="3"/><rect x="1" y="13" width="3" height="3"/><rect x="10" y="1" width="3" height="2"/><rect x="8" y="3" width="3" height="3"/><rect x="7" y="6" width="3" height="8"/><rect x="8" y="14" width="3" height="3"/><rect x="10" y="17" width="3" height="2"/></svg>
+    <h2>کامپیوتر شما به مشکل خورد و باید ریستارت بشه. فقط داریم کمی اطلاعات خطا جمع می‌کنیم و تا <span id="bcnt">۱۰</span> ثانیه‌ی دیگه شما رو به <span id="bfa">لینک</span> می‌بریم.</h2>
+    <div class="pct" id="bpct">0% complete</div>
+    <div class="bar2"><i id="bbar"></i></div>
+    <button type="button" class="now" id="bnow">همین الان برو</button>
+    <div class="row">
+      <div>
+        <p class="sm2">For more information about this issue and possible fixes, visit <span id="burl"></span></p>
+        <p class="sm2">If you call a support person, give them this info:<br>Stop code: CS_ASSOCIATION_REDIRECT</p>
+        <a class="go2" id="bgo" href="#">اگه باز نشد، اینجا بزن</a>
+        <button type="button" class="cx" id="bcx">انصراف</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="off" id="off" hidden><p>It's now safe to turn off<br>your computer.</p><small>tap anywhere to restart</small></div>
 <script>
 (function(){
@@ -213,10 +230,28 @@ button.tb.up{background:var(--win); box-shadow:inset -1px -1px var(--dk), inset 
   var el=$('clock');
   function tick(){try{var d=new Date();el.textContent=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}catch(e){}}
   tick(); setInterval(tick,20000);
+  var bt=null;
+  function draw(el){var p=Math.min(100,Math.floor(el/100));$('bpct').textContent=p+'% complete';$('bbar').style.width=p+'%';$('bcnt').textContent=String(Math.max(0,Math.ceil((10000-el)/1000))).replace(/\d/g,function(d){return '۰۱۲۳۴۵۶۷۸۹'[d];});}
+  function bsod(url,host){
+    var map={'t.me':'تلگرام'};
+    var b=$('bsod'),g=$('bgo'),t0=Date.now();
+    $('bfa').textContent=map[host]||'لینک'; $('burl').textContent=url.replace(/^https?:\/\//,'');
+    g.href=url; g.classList.remove('show'); b.hidden=false; draw(0);
+    clearInterval(bt);
+    bt=setInterval(function(){
+      var el=Date.now()-t0;
+      if(el>=10000){clearInterval(bt);draw(10000);g.classList.add('show');try{window.location.href=url;}catch(e){}return;}
+      draw(el);
+    },100);
+  }
+  $('bnow').addEventListener('click',function(){clearInterval(bt);var u=$('bgo').href;try{window.location.href=u;}catch(e){}$('bgo').classList.add('show');});
+  $('bcx').addEventListener('click',function(){clearInterval(bt);$('bsod').hidden=true;});
   function closeMenus(){document.querySelectorAll('.dd.open').forEach(function(m){m.classList.remove('open')});sm.hidden=true;}
   function showWin(v){win.hidden=!v;tb.classList.toggle('up',!v);}
   document.addEventListener('click',function(e){
     var t=e.target,m=t.closest('[data-m]'),a=t.closest('[data-act]');
+    var L=t.closest('a[href^="http"]');
+    if(L&&!t.closest('#bsod')){e.preventDefault();closeMenus();bsod(L.href,L.hostname);return;}
     if(m){var d=$('m-'+m.getAttribute('data-m')),was=d.classList.contains('open');closeMenus();if(!was)d.classList.add('open');return;}
     if(t.closest('#startbtn')){var h=sm.hidden;closeMenus();sm.hidden=!h;return;}
     if(t.closest('#taskbtn')){closeMenus();showWin(win.hidden);return;}
@@ -234,7 +269,7 @@ button.tb.up{background:var(--win); box-shadow:inset -1px -1px var(--dk), inset 
     if(t.closest('#off')){$('off').hidden=true;showWin(true);return;}
     if(!t.closest('.dd,.sm')){closeMenus();}
   });
-  document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeMenus();$('about').hidden=true;}});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeMenus();clearInterval(bt);$('bsod').hidden=true;$('about').hidden=true;}});
 })();
 </script>
 </body>
